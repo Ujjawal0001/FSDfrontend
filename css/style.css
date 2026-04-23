@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg,#1e3c72,#00d4aa);
+  color: white;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background: rgba(0,0,0,0.4);
+}
+
+.nav-links a {
+  margin: 0 10px;
+  color: white;
+  text-decoration: none;
+}
+
+.container {
+  padding: 30px;
+}

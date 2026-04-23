@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Farmer Profile</title>
+
+<style>
+body{
+  font-family:'Segoe UI';
+  margin:0;
+  background:linear-gradient(135deg,#e8f5e9,#f4f7f3);
+}
+
+.container{
+  max-width:600px;
+  margin:50px auto;
+  background:white;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+h2{
+  text-align:center;
+  color:#1f6012;
+}
+
+.info{
+  margin:15px 0;
+  padding:10px;
+  border-bottom:1px solid #eee;
+}
+
+.label{
+  font-weight:bold;
+  color:#555;
+}
+
+.value{
+  float:right;
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  margin-top:20px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:16px;
+}
+
+.logout{
+  background:#e53935;
+  color:white;
+}
+
+.edit{
+  background:#1f6012;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>👨‍🌾 Farmer Profile</h2>
+
+  <div class="info">
+    <span class="label">Farmer ID:</span>
+    <span class="value" id="p_userId">--</span>
+  </div>
+
+  <div class="info">
+    <span class="label">Farm Name:</span>
+    <span class="value" id="p_farm">--</span>
+  </div>
+
+  <div class="info">
+    <span class="label">Location:</span>
+    <span class="value" id="p_location">--</span>
+  </div>
+
+  <div class="info">
+    <span class="label">Crop Type:</span>
+    <span class="value" id="p_crop">--</span>
+  </div>
+
+  <div class="info">
+    <span class="label">Land Size:</span>
+    <span class="value" id="p_land">--</span>
+  </div>
+<div id="editBox" style="display:none; margin-top:20px;">
+
+  <h3>Edit Profile</h3>
+
+  <input id="e_farm" placeholder="Farm Name" style="width:100%;padding:10px;margin:5px 0;">
+  <input id="e_location" placeholder="Location" style="width:100%;padding:10px;margin:5px 0;">
+  <input id="e_crop" placeholder="Crop Type" style="width:100%;padding:10px;margin:5px 0;">
+  <input id="e_land" type="number" placeholder="Land Size" style="width:100%;padding:10px;margin:5px 0;">
+
+  <button class="btn edit" onclick="updateProfile()">💾 Save</button>
+  <button class="btn logout" onclick="closeEdit()">❌ Cancel</button>
+
+</div>
+  <button class="btn edit" onclick="openEdit()">✏️ Edit Profile</button>
+<button class="btn edit" onclick="goDashboard()">⬅ Back to Dashboard</button>
+<button class="btn logout" onclick="logout()">🚪 Logout</button>
+
+</div>
+
+<script>
+
+window.onload = loadProfile;
+function openEdit(){
+
+  document.getElementById("editBox").style.display = "block";
+
+  document.getElementById("e_farm").value =
+    document.getElementById("p_farm").innerText;
+
+  document.getElementById("e_location").value =
+    document.getElementById("p_location").innerText;
+
+  document.getElementById("e_crop").value =
+    document.getElementById("p_crop").innerText;
+
+  document.getElementById("e_land").value =
+    document.getElementById("p_land").innerText.replace(" acres","");
+}
+function closeEdit(){
+  document.getElementById("editBox").style.display = "none";
+}
+async function updateProfile(){
+
+  const userId = localStorage.getItem("userId");
+
+  const payload = {
+    farmName: document.getElementById("e_farm").value,
+    location: document.getElementById("e_location").value,
+    cropType: document.getElementById("e_crop").value,
+    landSize: Number(document.getElementById("e_land").value)
+  };
+
+  console.log("Sending:", payload); // 🔍 DEBUG
+
+  try{
+    const res = await fetch(`http://localhost:5000/api/data/farmer/${userId}`,{
+      method:"PUT",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    console.log("Response:", data); // 🔍 DEBUG
+
+    if(data.success){
+      alert("✅ Profile Updated");
+      closeEdit();
+      loadProfile();
+    }else{
+      alert("❌ Update failed");
+    }
+
+  }catch(err){
+    console.log("Update error:", err);
+    alert("Server error");
+  }
+}
+async function loadProfile(){
+
+  const userId = localStorage.getItem("userId");
+
+  if(!userId){
+    alert("Not logged in");
+    window.location.href = "login.html";
+    return;
+  }
+
+  try{
+    const res = await fetch(`http://localhost:5000/api/data/farmer/${userId}`);;
+    const data = await res.json();
+
+    document.getElementById("p_userId").innerText = data.userId || "--";
+    document.getElementById("p_farm").innerText = data.farmName || "--";
+    document.getElementById("p_location").innerText = data.location || "--";
+    document.getElementById("p_crop").innerText = data.cropType || "--";
+    document.getElementById("p_land").innerText = data.landSize + " acres" || "--";
+
+  }catch(err){
+    console.log("Profile error:", err);
+    alert("Failed to load profile");
+  }
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+function goDashboard(){
+  const userId = localStorage.getItem("userId");
+  window.location.href = "dashboard.html?userId=" + userId;
+}
+
+</script>
+
+</body>
+</html>

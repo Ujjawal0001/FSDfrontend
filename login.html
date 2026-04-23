@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AgroSense Login</title>
+
+<style>
+body{
+  font-family:'Segoe UI';
+  background:linear-gradient(135deg,#e8f5e9,#f4f7f3);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box{
+  background:white;
+  padding:30px;
+  border-radius:15px;
+  width:320px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  text-align:center;
+}
+
+input,select{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  background:#1f6012;
+  color:white;
+  border:none;
+  cursor:pointer;
+  border-radius:8px;
+}
+
+button:hover{
+  background:#14440c;
+}
+
+#msg{
+  margin-top:10px;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h2>🌱 AgroSense Login</h2>
+
+  <select id="role" onchange="toggleFields()">
+    <option value="farmer">Farmer</option>
+    <option value="admin">Admin</option>
+  </select>
+
+  <input type="text" id="userId" placeholder="Farmer ID">
+  <input type="email" id="email" placeholder="Admin Email" style="display:none;">
+  
+  <input type="password" id="password" placeholder="Password">
+  <div style="text-align:left;font-size:12px;">
+    <input type="checkbox" onclick="togglePass()"> Show Password
+  </div>
+
+  <button onclick="login()">Login</button>
+  <p>
+  New Farmer? 
+  <a href="register.html">Register here</a>
+</p>
+  <p id="msg"></p>
+
+</div>
+
+
+<script>
+
+// toggle fields
+function toggleFields(){
+  const role = document.getElementById("role").value;
+
+  if(role === "admin"){
+    document.getElementById("email").style.display = "block";
+    document.getElementById("userId").style.display = "none";
+  }else{
+    document.getElementById("email").style.display = "none";
+    document.getElementById("userId").style.display = "block";
+  }
+}
+
+// show password
+function togglePass(){
+  const p = document.getElementById("password");
+  p.type = p.type === "password" ? "text" : "password";
+}
+
+// login function
+async function login(){
+
+  const role = document.getElementById("role").value;
+  const password = document.getElementById("password").value.trim();
+
+  let payload = { password };
+
+  if(role === "admin"){
+    payload.email = document.getElementById("email").value.trim();
+  }else{
+    payload.userId = document.getElementById("userId").value.trim();
+  }
+
+  // ✅ VALIDATION
+  if(role === "admin" && !payload.email){
+    document.getElementById("msg").innerText = "⚠ Enter email";
+    return;
+  }
+
+  if(role === "farmer" && !payload.userId){
+    document.getElementById("msg").innerText = "⚠ Enter farmer ID";
+    return;
+  }
+
+  if(!password){
+    document.getElementById("msg").innerText = "⚠ Enter password";
+    return;
+  }
+
+  // loading message
+  document.getElementById("msg").innerText = "⏳ Logging in...";
+
+  try{
+    const res = await fetch("http://localhost:5000/api/auth/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+
+      if(data.role === "admin"){
+        localStorage.setItem("adminToken", data.token);
+        window.location.href = "admin.html";
+      }
+
+      if(data.role === "farmer"){
+        localStorage.setItem("userId", data.userId);
+        window.location.href = "dashboard.html?userId=" + data.userId;
+      }
+
+    }else{
+      document.getElementById("msg").innerText = "❌ Invalid credentials";
+    }
+
+  }catch(err){
+    document.getElementById("msg").innerText = "⚠ Server error / backend not running";
+  }
+}
+
+</script>
+
+</body>
+</html>
