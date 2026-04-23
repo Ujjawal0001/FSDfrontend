@@ -192,7 +192,14 @@ body{
 
 </div>
 
+
 <script>
+  window.onload = async () => {
+  updateSensorStatus();
+  await loadWeather();  // Weather first
+  await loadData();     // Sensors + chart
+  setInterval(loadData, 3000);
+};
   function openProfile(){
   const userId = localStorage.getItem("userId");
   window.location.href = "profile.html?userId=" + userId;
@@ -747,7 +754,7 @@ async function loadData(){
 
   try {
     
-    const res = await fetch(`http://localhost:5000/api/data/${userId}`);
+    const res = await fetch(`https://your-backend.onrender.com/api/data/${userId}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
