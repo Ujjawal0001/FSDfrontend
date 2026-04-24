@@ -192,14 +192,7 @@ body{
 
 </div>
 
-
 <script>
-  window.onload = async () => {
-  updateSensorStatus();
-  await loadWeather();  // Weather first
-  await loadData();     // Sensors + chart
-  setInterval(loadData, 3000);
-};
   function openProfile(){
   const userId = localStorage.getItem("userId");
   window.location.href = "profile.html?userId=" + userId;
@@ -408,7 +401,7 @@ window.onload = () => {
   loadData();
   loadAlerts();
   loadWeather();
-  
+  loadCrops();
   setInterval(loadData,3000);
 };
 let crops = []; // global
@@ -703,7 +696,10 @@ function closeEdit(){
 }
 async function loadAlerts(){
 
-  const userId = new URLSearchParams(window.location.search).get("userId");
+  const params = new URLSearchParams(window.location.search);
+const urlId = params.get("userId");
+
+const userId = urlId || localStorage.getItem("userId");
 
   const res = await fetch(`http://localhost:5000/api/alerts/${userId}`);
   const data = await res.json();
@@ -748,46 +744,61 @@ async function deleteAlert(id){
 let latestData = null;
 
 async function loadData(){
-  
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
 
-  try {
-    
-    const res = await fetch(`https://your-backend.onrender.com/api/data/${userId}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const params = new URLSearchParams(window.location.search);
+const urlId = params.get("userId");
 
+const userId = urlId || localStorage.getItem("userId");
+
+  if(!userId){
+    console.log("No userId");
+    return;
+  }
+
+  try{
+    const res = await fetch(`http://localhost:5000/api/data/${userId}`);
     const data = await res.json();
 
-    if (!data.length) return;
+    if(!data || data.length === 0){
+      console.log("No sensor data");
+      return;
+    }
 
     const d = data[0];
+    latestData = d;
 
+    // ✅ UI UPDATE
     document.getElementById("temp").innerText = d.temperature;
     document.getElementById("hum").innerText = d.humidity;
     document.getElementById("soil").innerText = d.soilMoisture;
 
     const water = (100 - d.soilMoisture) * 10;
-    document.getElementById("water").innerText = `${water} L/day`;
+    document.getElementById("water").innerText = `${water}L/day`;
 
+    // ✅ SENSOR STATUS
     updateSensorStatus();
-    document.getElementById("lastUpdate").innerText = new Date().toLocaleTimeString();
+    document.getElementById("lastUpdate").innerText =
+      new Date().toLocaleTimeString();
 
-    await loadCrops();
-    updateCropMonitoring(d);
-    updateChart(d);
-    aiRec(d, latestWeather);
-    loadAlerts();
-  } catch (err) {
-    console.log("loadData error:", err);
-    document.getElementById("temp").innerText = "--";
-    document.getElementById("hum").innerText = "--";
-    document.getElementById("soil").innerText = "--";
-    document.getElementById("water").innerText = "--";
-    document.getElementById("lastUpdate").innerText = "⚠ Server offline";
+      // ✅ FEATURES
+      updateChart(d);
+      updateCropMonitoring(d);
+      aiRec(d, latestWeather);
+      
+      // (optional depending on your setup)
+      loadAlerts();
+     
+     
+
+  }catch(err){
+    console.log("LoadData Error:", err);
+
+    // 🔴 show offline status
+    document.getElementById("s_temp").innerText = "🔴 Offline";
+    document.getElementById("s_hum").innerText = "🔴 Offline";
+    document.getElementById("s_soil").innerText = "🔴 Offline";
   }
 }
-
 function updateChart(d){
   const t = new Date().toLocaleTimeString();
 
