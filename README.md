@@ -3,6 +3,7 @@
 AgroSense is a smart farming web application that helps farmers monitor real-time farm conditions, receive AI-based recommendations, and manage crops efficiently. This repository contains the frontend of the AgroSense system.
 
 🚀 Features
+
     🔐 Farmer Authentication (Login & Register)
     📊 Real-time Dashboard (Temperature, Humidity, Soil Moisture)
     🚰 Water Requirement Calculation
@@ -15,12 +16,14 @@ AgroSense is a smart farming web application that helps farmers monitor real-tim
     📈 Live Charts using Chart.js
 
 🛠️ Tech Stack
+
     HTML5
     CSS3
     JavaScript (Vanilla JS)
     Chart.js (for data visualization)
     
 📂 Project Structure
+
           frontend/
       │── login.html
       │── register.html
@@ -31,6 +34,7 @@ AgroSense is a smart farming web application that helps farmers monitor real-tim
       │── script.js (if separate)
       
 Frontend uses APIs like:
+
     /api/auth/login
     /api/auth/register
     /api/data/:userId
@@ -40,6 +44,7 @@ Frontend uses APIs like:
     /api/weather
 
 📸 Screens
+
     Login Page
     Farmer Dashboard
     Crop Monitoring
@@ -47,6 +52,7 @@ Frontend uses APIs like:
     Admin Panel
     
 💡 How It Works
+
     Sensor data is fetched from backend APIs
     Dashboard updates in real-time
     AI logic generates recommendations
