@@ -1,47 +1,81 @@
-import Admin from "../models/Admin.js";
-import Sensor from "../models/Sensor.js";
+// toggle fields
+function toggleFields(){
+  const role = document.getElementById("role").value;
 
-router.post("/login", async (req, res) => {
+  if(role === "admin"){
+    document.getElementById("email").style.display = "block";
+    document.getElementById("userId").style.display = "none";
+  }else{
+    document.getElementById("email").style.display = "none";
+    document.getElementById("userId").style.display = "block";
+  }
+}
 
-  console.log("REQ BODY:", req.body);
+// show password
+function togglePass(){
+  const p = document.getElementById("password");
+  p.type = p.type === "password" ? "text" : "password";
+}
 
-  const { email, userId, password } = req.body;
+// login function
+async function login(){
 
-  try {
+  const role = document.getElementById("role").value;
+  const password = document.getElementById("password").value.trim();
 
-    // 🔴 ADMIN LOGIN
-    if(email){
-      const admin = await Admin.findOne({ email });
-      console.log("ADMIN:", admin);
+  let payload = { password };
 
-      if(admin && admin.password === password){
-        return res.json({
-          success: true,
-          role: "admin",
-          token: "admin-token"
-        });
-      }
-    }
-
-    // 🟢 FARMER LOGIN
-    if(userId){
-      const farmer = await Sensor.findOne({ userId });
-      console.log("FARMER:", farmer);
-
-      if(farmer){
-        return res.json({
-          success: true,
-          role: "farmer",
-          userId
-        });
-      }
-    }
-
-    res.status(401).json({ success:false, message:"Invalid credentials" });
-
-  } catch(err){
-    console.log(err);
-    res.status(500).json({ success:false, message:"Server error" });
+  if(role === "admin"){
+    payload.email = document.getElementById("email").value.trim();
+  }else{
+    payload.userId = document.getElementById("userId").value.trim();
   }
 
-});
+  // ✅ VALIDATION
+  if(role === "admin" && !payload.email){
+    document.getElementById("msg").innerText = "⚠ Enter email";
+    return;
+  }
+
+  if(role === "farmer" && !payload.userId){
+    document.getElementById("msg").innerText = "⚠ Enter farmer ID";
+    return;
+  }
+
+  if(!password){
+    document.getElementById("msg").innerText = "⚠ Enter password";
+    return;
+  }
+
+  // loading message
+  document.getElementById("msg").innerText = "⏳ Logging in...";
+
+  try{
+    const res = await fetch("http://localhost:5000/api/auth/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+
+      if(data.role === "admin"){
+        localStorage.setItem("adminToken", data.token);
+        window.location.href = "admin.html";
+      }
+
+      if(data.role === "farmer"){
+        localStorage.setItem("userId", data.userId);
+        window.location.href = "dashboard.html?userId=" + data.userId;
+      }
+
+    }else{
+      document.getElementById("msg").innerText = "❌ Invalid credentials";
+    }
+
+  }catch(err){
+    document.getElementById("msg").innerText = "⚠ Server error / backend not running";
+  }
+}
